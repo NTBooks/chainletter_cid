@@ -21,7 +21,7 @@
                     "ext": "clstamp",
                     "name": "Chainletter Stamp File",
                     "description": "Chainletter File Viewer Stamp File",
-                    "icon": "appicon.ico"
+                    "icon": "clstamp.ico"
                 }
             ]
         },
