@@ -18,6 +18,7 @@ function createWindow() {
         }
     });
 
+    mainWindow.setMenuBarVisibility(false);
     mainWindow.loadFile('index.html');
 }
 
@@ -106,7 +107,8 @@ ipcMain.handle('process-file', async (event, filePath) => {
         const fileBuffer = fs.readFileSync(filePath);
         const cid = await ipfsOnlyHash.of(fileBuffer);
 
-        if (path.extname(filePath).toLowerCase() === '.zip') {
+        const ext = path.extname(filePath).toLowerCase();
+        if (ext === '.zip' || ext === '.zip.clstamp') {
             const zip = new AdmZip(filePath);
             const manifestEntry = zip.getEntry('manifest.txt');
 

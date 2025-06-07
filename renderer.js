@@ -83,11 +83,23 @@ const handleFiles = async (files) => {
         if (result.type === 'zip-with-manifest') {
             contentDiv.innerHTML += `<div>Target file: ${result.targetFileName}</div>`;
 
+            // Create two-column layout
+            const columnsDiv = document.createElement('div');
+            columnsDiv.style.display = 'flex';
+            columnsDiv.style.justifyContent = 'space-between';
+            columnsDiv.style.alignItems = 'center';
+            columnsDiv.style.marginTop = '20px';
+
+            // Left column for preview
+            const previewColumn = document.createElement('div');
+            previewColumn.style.flex = '1';
+            previewColumn.style.textAlign = 'center';
+
             if (result.imagePreview) {
                 const previewDiv = document.createElement('div');
-                previewDiv.style.margin = '10px 0';
-                previewDiv.style.maxWidth = '200px';
-                previewDiv.style.maxHeight = '200px';
+                previewDiv.style.margin = '0 auto';
+                previewDiv.style.maxWidth = '120px';
+                previewDiv.style.maxHeight = '120px';
 
                 const img = document.createElement('img');
                 img.src = result.imagePreview;
@@ -96,8 +108,13 @@ const handleFiles = async (files) => {
                 img.style.objectFit = 'contain';
 
                 previewDiv.appendChild(img);
-                contentDiv.appendChild(previewDiv);
+                previewColumn.appendChild(previewDiv);
             }
+
+            // Right column for extract button
+            const buttonColumn = document.createElement('div');
+            buttonColumn.style.flex = '1';
+            buttonColumn.style.textAlign = 'center';
 
             const extractButton = document.createElement('button');
             extractButton.textContent = 'Extract file';
@@ -110,8 +127,14 @@ const handleFiles = async (files) => {
                 }
             });
 
+            buttonColumn.appendChild(extractButton);
+
+            // Add columns to the layout
+            columnsDiv.appendChild(previewColumn);
+            columnsDiv.appendChild(buttonColumn);
+
             fileEntry.appendChild(contentDiv);
-            fileEntry.appendChild(extractButton);
+            fileEntry.appendChild(columnsDiv);
         } else {
             if (result.imagePreview) {
                 const previewDiv = document.createElement('div');
