@@ -14,7 +14,16 @@
             "**/*"
         ],
         "win": {
-            "target": "nsis"
+            "target": "nsis",
+            "icon": "appicon.ico",
+            "fileAssociations": [
+                {
+                    "ext": "clstamp",
+                    "name": "Chainletter Stamp File",
+                    "description": "Chainletter File Viewer Stamp File",
+                    "icon": "appicon.ico"
+                }
+            ]
         },
         "mac": {
             "target": "dmg"

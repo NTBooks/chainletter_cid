@@ -7,6 +7,15 @@ const ipfsOnlyHash = require('ipfs-only-hash');
 let mainWindow;
 let currentZipInfo = null;
 let tray = null;
+let openFileOnReady = null;
+
+// On Windows, the file path is in process.argv when the app is launched by double-click
+if (process.platform === 'win32' && process.argv.length >= 2) {
+    const filePath = process.argv.find(arg => arg.endsWith('.clstamp'));
+    if (filePath) {
+        openFileOnReady = filePath;
+    }
+}
 
 function createWindow() {
     mainWindow = new BrowserWindow({
@@ -48,6 +57,13 @@ if (!gotTheLock) {
         createWindow();
         tray = new Tray(path.join(__dirname, 'appicon.ico'));
         tray.setToolTip('Chainletter File Viewer');
+
+        // If a file was passed on startup, send it to the renderer
+        if (openFileOnReady && mainWindow) {
+            mainWindow.webContents.once('did-finish-load', () => {
+                mainWindow.webContents.send('open-file', openFileOnReady);
+            });
+        }
     });
 }
 
@@ -95,7 +111,7 @@ ipcMain.handle('extract-file', async () => {
             const targetEntry = zip.getEntry(currentZipInfo.targetFileName);
 
             if (!targetEntry) {
-                return { success: false, error: 'Target file not found in zip' };
+                return { success: false, error: 'Verified file not found in zip' };
             }
 
             // Create a temporary file
@@ -133,7 +149,7 @@ ipcMain.handle('process-file', async (event, filePath) => {
     try {
         const fileBuffer = fs.readFileSync(filePath);
         const ext = path.extname(filePath).toLowerCase();
-        if (ext === '.zip' || ext === '.zip.clstamp') {
+        if (ext === '.zip' || ext === '.zip.clstamp' || ext === '.clstamp') {
             const zip = new AdmZip(filePath);
             const manifestEntry = zip.getEntry('manifest.txt');
 

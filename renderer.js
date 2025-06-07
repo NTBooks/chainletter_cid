@@ -76,12 +76,12 @@ const handleFiles = async (files) => {
         // Create content container
         const contentDiv = document.createElement('div');
         contentDiv.innerHTML = `
-            <div>File: ${result.fileName}</div>
-            <div class="cid-display">CID: ${result.cid}</div>
+            <div><strong>File:</strong> ${result.fileName}</div>
+            <div><strong>CID:</strong><span class="cid-display">${result.cid}</span></div>
         `;
 
         if (result.type === 'zip-with-manifest') {
-            contentDiv.innerHTML += `<div>Target file: ${result.targetFileName}</div>`;
+            contentDiv.innerHTML += `<div><strong>Validated file:</strong> ${result.targetFileName}</div>`;
 
             // Create two-column layout
             const columnsDiv = document.createElement('div');
