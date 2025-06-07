@@ -35,6 +35,21 @@ app.on('activate', () => {
     }
 });
 
+function isImageFile(filename) {
+    const ext = path.extname(filename).toLowerCase();
+    return ['.png', '.jpg', '.jpeg'].includes(ext);
+}
+
+function getImagePreview(filePath) {
+    try {
+        const imageBuffer = fs.readFileSync(filePath);
+        return `data:image/${path.extname(filePath).slice(1)};base64,${imageBuffer.toString('base64')}`;
+    } catch (error) {
+        console.error('Error reading image:', error);
+        return null;
+    }
+}
+
 // Handle file extraction
 ipcMain.handle('extract-file', async () => {
     try {
@@ -101,6 +116,23 @@ ipcMain.handle('process-file', async (event, filePath) => {
                 const targetEntry = zip.getEntry(targetFileName);
 
                 if (targetEntry) {
+                    // If it's an image, create a preview
+                    let imagePreview = null;
+                    if (isImageFile(targetFileName)) {
+                        const tempDir = path.join(app.getPath('temp'), 'chainletter-preview');
+                        if (!fs.existsSync(tempDir)) {
+                            fs.mkdirSync(tempDir, { recursive: true });
+                        }
+                        const tempPath = path.join(tempDir, targetFileName);
+                        zip.extractEntryTo(targetEntry, tempDir, false, true);
+                        imagePreview = getImagePreview(tempPath);
+                        try {
+                            fs.unlinkSync(tempPath);
+                        } catch (e) {
+                            console.error('Error cleaning up preview temp file:', e);
+                        }
+                    }
+
                     currentZipInfo = {
                         zipPath: filePath,
                         targetFileName
@@ -110,17 +142,25 @@ ipcMain.handle('process-file', async (event, filePath) => {
                         type: 'zip-with-manifest',
                         cid,
                         fileName: path.basename(filePath),
-                        targetFileName
+                        targetFileName,
+                        imagePreview
                     };
                 }
             }
+        }
+
+        // For regular files, check if it's an image
+        let imagePreview = null;
+        if (isImageFile(filePath)) {
+            imagePreview = getImagePreview(filePath);
         }
 
         currentZipInfo = null;
         return {
             type: 'regular',
             cid,
-            fileName: path.basename(filePath)
+            fileName: path.basename(filePath),
+            imagePreview
         };
     } catch (error) {
         console.error('Processing error:', error);

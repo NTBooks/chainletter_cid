@@ -17,6 +17,7 @@ const handleFiles = async (files) => {
         table.innerHTML = `
             <thead>
                 <tr>
+                    <th>Preview</th>
                     <th>Filename</th>
                     <th>CID</th>
                 </tr>
@@ -33,10 +34,30 @@ const handleFiles = async (files) => {
             }
 
             const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${result.fileName}</td>
-                <td class="cid-display">${result.cid}</td>
-            `;
+            const previewCell = document.createElement('td');
+            previewCell.style.width = '100px';
+            previewCell.style.height = '100px';
+            previewCell.style.padding = '5px';
+
+            if (result.imagePreview) {
+                const img = document.createElement('img');
+                img.src = result.imagePreview;
+                img.style.maxWidth = '100%';
+                img.style.maxHeight = '100%';
+                img.style.objectFit = 'contain';
+                previewCell.appendChild(img);
+            }
+
+            const nameCell = document.createElement('td');
+            nameCell.textContent = result.fileName;
+
+            const cidCell = document.createElement('td');
+            cidCell.className = 'cid-display';
+            cidCell.textContent = result.cid;
+
+            row.appendChild(previewCell);
+            row.appendChild(nameCell);
+            row.appendChild(cidCell);
             table.querySelector('tbody').appendChild(row);
         }
     } else {
@@ -52,12 +73,32 @@ const handleFiles = async (files) => {
         const fileEntry = document.createElement('div');
         fileEntry.className = 'file-entry';
 
-        let content = `
+        // Create content container
+        const contentDiv = document.createElement('div');
+        contentDiv.innerHTML = `
             <div>File: ${result.fileName}</div>
             <div class="cid-display">CID: ${result.cid}</div>
         `;
 
         if (result.type === 'zip-with-manifest') {
+            contentDiv.innerHTML += `<div>Target file: ${result.targetFileName}</div>`;
+
+            if (result.imagePreview) {
+                const previewDiv = document.createElement('div');
+                previewDiv.style.margin = '10px 0';
+                previewDiv.style.maxWidth = '200px';
+                previewDiv.style.maxHeight = '200px';
+
+                const img = document.createElement('img');
+                img.src = result.imagePreview;
+                img.style.maxWidth = '100%';
+                img.style.maxHeight = '100%';
+                img.style.objectFit = 'contain';
+
+                previewDiv.appendChild(img);
+                contentDiv.appendChild(previewDiv);
+            }
+
             const extractButton = document.createElement('button');
             extractButton.textContent = 'Extract file';
             extractButton.addEventListener('click', async () => {
@@ -69,13 +110,26 @@ const handleFiles = async (files) => {
                 }
             });
 
-            content += `
-                <div>Target file: ${result.targetFileName}</div>
-            `;
-            fileEntry.innerHTML = content;
+            fileEntry.appendChild(contentDiv);
             fileEntry.appendChild(extractButton);
         } else {
-            fileEntry.innerHTML = content;
+            if (result.imagePreview) {
+                const previewDiv = document.createElement('div');
+                previewDiv.style.margin = '10px 0';
+                previewDiv.style.maxWidth = '200px';
+                previewDiv.style.maxHeight = '200px';
+
+                const img = document.createElement('img');
+                img.src = result.imagePreview;
+                img.style.maxWidth = '100%';
+                img.style.maxHeight = '100%';
+                img.style.objectFit = 'contain';
+
+                previewDiv.appendChild(img);
+                contentDiv.appendChild(previewDiv);
+            }
+
+            fileEntry.appendChild(contentDiv);
         }
 
         fileInfo.appendChild(fileEntry);
