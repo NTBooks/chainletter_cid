@@ -2,6 +2,9 @@ const dropzone = document.getElementById('dropzone');
 const fileInput = document.getElementById('fileInput');
 const fileInfo = document.getElementById('file-info');
 
+// Store extracted content
+let extractedContent = null;
+
 const handleFiles = async (files) => {
     if (files.length === 0) return;
 
@@ -55,21 +58,27 @@ const handleFiles = async (files) => {
         `;
 
         if (result.type === 'zip-with-manifest') {
+            const extractButton = document.createElement('button');
+            extractButton.textContent = 'Extract file';
+            extractButton.addEventListener('click', async () => {
+                const extractResult = await window.electronAPI.extractFile();
+                if (extractResult.success) {
+                    alert(`File saved to: ${extractResult.path}`);
+                } else if (extractResult.error) {
+                    alert(`Error: ${extractResult.error}`);
+                }
+            });
+
             content += `
                 <div>Target file: ${result.targetFileName}</div>
-                <button onclick="extractFile('${result.targetFileName}', '${result.cid}')">Extract file</button>
             `;
+            fileEntry.innerHTML = content;
+            fileEntry.appendChild(extractButton);
+        } else {
+            fileEntry.innerHTML = content;
         }
 
-        fileEntry.innerHTML = content;
         fileInfo.appendChild(fileEntry);
-    }
-};
-
-const extractFile = async (fileName, cid) => {
-    const result = await window.electronAPI.saveFile(fileName, null);
-    if (result.success) {
-        alert(`File saved to: ${result.path}`);
     }
 };
 

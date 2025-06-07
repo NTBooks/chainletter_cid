@@ -5,6 +5,7 @@ const AdmZip = require('adm-zip');
 const ipfsOnlyHash = require('ipfs-only-hash');
 
 let mainWindow;
+let currentZipInfo = null;
 
 function createWindow() {
     mainWindow = new BrowserWindow({
@@ -34,17 +35,54 @@ app.on('activate', () => {
     }
 });
 
-// Handle file save dialog
-ipcMain.handle('save-file', async (event, { filePath, content }) => {
-    const { filePath: savePath } = await dialog.showSaveDialog({
-        defaultPath: path.basename(filePath)
-    });
+// Handle file extraction
+ipcMain.handle('extract-file', async () => {
+    try {
+        if (!currentZipInfo) {
+            throw new Error('No zip file has been processed');
+        }
 
-    if (savePath) {
-        fs.writeFileSync(savePath, content);
-        return { success: true, path: savePath };
+        const { filePath: savePath } = await dialog.showSaveDialog({
+            defaultPath: currentZipInfo.targetFileName,
+            properties: ['createDirectory']
+        });
+
+        if (savePath) {
+            const zip = new AdmZip(currentZipInfo.zipPath);
+            const targetEntry = zip.getEntry(currentZipInfo.targetFileName);
+
+            if (!targetEntry) {
+                return { success: false, error: 'Target file not found in zip' };
+            }
+
+            // Create a temporary file
+            const tempDir = path.join(app.getPath('temp'), 'chainletter-extract');
+            if (!fs.existsSync(tempDir)) {
+                fs.mkdirSync(tempDir, { recursive: true });
+            }
+
+            const tempPath = path.join(tempDir, currentZipInfo.targetFileName);
+
+            // Extract to temp file first
+            zip.extractEntryTo(targetEntry, tempDir, false, true);
+
+            // Then copy to final destination
+            fs.copyFileSync(tempPath, savePath);
+
+            // Clean up temp file
+            try {
+                fs.unlinkSync(tempPath);
+            } catch (e) {
+                console.error('Error cleaning up temp file:', e);
+            }
+
+            return { success: true, path: savePath };
+        }
+        return { success: false };
+    } catch (error) {
+        console.error('Extraction error:', error);
+        return { success: false, error: error.message };
     }
-    return { success: false };
 });
 
 // Handle file processing
@@ -63,23 +101,30 @@ ipcMain.handle('process-file', async (event, filePath) => {
                 const targetEntry = zip.getEntry(targetFileName);
 
                 if (targetEntry) {
+                    currentZipInfo = {
+                        zipPath: filePath,
+                        targetFileName
+                    };
+
                     return {
                         type: 'zip-with-manifest',
                         cid,
                         fileName: path.basename(filePath),
-                        targetFileName,
-                        targetContent: zip.readFile(targetEntry)
+                        targetFileName
                     };
                 }
             }
         }
 
+        currentZipInfo = null;
         return {
             type: 'regular',
             cid,
             fileName: path.basename(filePath)
         };
     } catch (error) {
+        console.error('Processing error:', error);
+        currentZipInfo = null;
         return { error: error.message };
     }
 }); 
