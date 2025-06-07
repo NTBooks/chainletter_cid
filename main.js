@@ -132,8 +132,6 @@ ipcMain.handle('extract-file', async () => {
 ipcMain.handle('process-file', async (event, filePath) => {
     try {
         const fileBuffer = fs.readFileSync(filePath);
-        const cid = await ipfsOnlyHash.of(fileBuffer);
-
         const ext = path.extname(filePath).toLowerCase();
         if (ext === '.zip' || ext === '.zip.clstamp') {
             const zip = new AdmZip(filePath);
@@ -145,21 +143,28 @@ ipcMain.handle('process-file', async (event, filePath) => {
                 const targetEntry = zip.getEntry(targetFileName);
 
                 if (targetEntry) {
+                    // Extract the target file to a temp location to calculate its CID
+                    const tempDir = path.join(app.getPath('temp'), 'chainletter-preview');
+                    if (!fs.existsSync(tempDir)) {
+                        fs.mkdirSync(tempDir, { recursive: true });
+                    }
+                    const tempPath = path.join(tempDir, targetFileName);
+                    zip.extractEntryTo(targetEntry, tempDir, false, true);
+
+                    // Calculate CID of the extracted file
+                    const targetBuffer = fs.readFileSync(tempPath);
+                    const cid = await ipfsOnlyHash.of(targetBuffer);
+
                     // If it's an image, create a preview
                     let imagePreview = null;
                     if (isImageFile(targetFileName)) {
-                        const tempDir = path.join(app.getPath('temp'), 'chainletter-preview');
-                        if (!fs.existsSync(tempDir)) {
-                            fs.mkdirSync(tempDir, { recursive: true });
-                        }
-                        const tempPath = path.join(tempDir, targetFileName);
-                        zip.extractEntryTo(targetEntry, tempDir, false, true);
                         imagePreview = getImagePreview(tempPath);
-                        try {
-                            fs.unlinkSync(tempPath);
-                        } catch (e) {
-                            console.error('Error cleaning up preview temp file:', e);
-                        }
+                    }
+
+                    try {
+                        fs.unlinkSync(tempPath);
+                    } catch (e) {
+                        console.error('Error cleaning up preview temp file:', e);
                     }
 
                     currentZipInfo = {
@@ -180,6 +185,7 @@ ipcMain.handle('process-file', async (event, filePath) => {
 
         // For regular files, check if it's an image
         let imagePreview = null;
+        let cid = await ipfsOnlyHash.of(fileBuffer);
         if (isImageFile(filePath)) {
             imagePreview = getImagePreview(filePath);
         }
