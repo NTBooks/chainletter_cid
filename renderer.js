@@ -178,4 +178,8 @@ dropzone.addEventListener('drop', (e) => {
 // File input handler
 fileInput.addEventListener('change', (e) => {
     handleFiles(e.target.files);
+});
+
+window.electronAPI.onOpenFile((filePath) => {
+    handleFiles([{ path: filePath }]);
 }); 

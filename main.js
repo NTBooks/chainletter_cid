@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, Tray } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const AdmZip = require('adm-zip');
@@ -6,11 +6,13 @@ const ipfsOnlyHash = require('ipfs-only-hash');
 
 let mainWindow;
 let currentZipInfo = null;
+let tray = null;
 
 function createWindow() {
     mainWindow = new BrowserWindow({
         width: 600,
         height: 600,
+        icon: path.join(__dirname, 'appicon.ico'),
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
@@ -22,7 +24,32 @@ function createWindow() {
     mainWindow.loadFile('index.html');
 }
 
-app.whenReady().then(createWindow);
+const gotTheLock = app.requestSingleInstanceLock();
+
+if (!gotTheLock) {
+    app.quit();
+} else {
+    app.on('second-instance', (event, argv, workingDirectory) => {
+        // Windows: file path is in argv
+        const filePath = argv.find(arg => arg.endsWith('.clstamp'));
+        if (filePath && mainWindow) {
+            mainWindow.webContents.send('open-file', filePath);
+        }
+    });
+
+    app.whenReady().then(() => {
+        // macOS: handle open-file event
+        app.on('open-file', (event, filePath) => {
+            event.preventDefault();
+            if (mainWindow) {
+                mainWindow.webContents.send('open-file', filePath);
+            }
+        });
+        createWindow();
+        tray = new Tray(path.join(__dirname, 'appicon.ico'));
+        tray.setToolTip('Chainletter File Viewer');
+    });
+}
 
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {

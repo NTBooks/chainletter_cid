@@ -1,14 +1,37 @@
 {
     "name": "chainletter-cid",
-    "version": "1.0.0",
+    "version": "0.0.2",
     "description": "File dropzone app with IPFS CID calculation",
     "main": "main.js",
     "scripts": {
-        "start": "electron ."
+        "start": "electron .",
+        "dist": "electron-builder"
+    },
+    "build": {
+        "appId": "com.chainletter.io.chainletterfileviewer",
+        "productName": "Chainletter File Viewer",
+        "files": [
+            "**/*"
+        ],
+        "win": {
+            "target": "nsis"
+        },
+        "mac": {
+            "target": "dmg"
+        },
+        "linux": {
+            "target": [
+                "AppImage",
+                "deb"
+            ]
+        }
     },
     "dependencies": {
-        "electron": "^28.1.0",
         "ipfs-only-hash": "^4.0.0",
         "adm-zip": "^0.5.10"
+    },
+    "devDependencies": {
+        "electron": "^28.1.0",
+        "electron-builder": "^24.0.0"
     }
 }
