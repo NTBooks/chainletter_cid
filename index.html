@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>File Dropzone</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            height: 100vh;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #dropzone {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+            margin-bottom: 20px;
+        }
+
+        #dropzone.dragover {
+            background: #e9ecef;
+            border-color: #007bff;
+        }
+
+        #dropzone.has-files {
+            height: 50%;
+        }
+
+        #file-info {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .file-entry {
+            margin-bottom: 15px;
+            padding: 10px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+        }
+
+        .cid-display {
+            font-family: monospace;
+            word-break: break-all;
+            margin: 10px 0;
+        }
+
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th,
+        td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        th {
+            background-color: #f8f9fa;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="dropzone">
+        <p>Drag your file here or click to upload</p>
+        <input type="file" id="fileInput" style="display: none" multiple>
+        <button onclick="document.getElementById('fileInput').click()">Browse Files</button>
+    </div>
+    <div id="file-info"></div>
+    <script src="renderer.js"></script>
+</body>
+
+</html>

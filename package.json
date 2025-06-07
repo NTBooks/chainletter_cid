@@ -1,0 +1,14 @@
+{
+    "name": "chainletter-cid",
+    "version": "1.0.0",
+    "description": "File dropzone app with IPFS CID calculation",
+    "main": "main.js",
+    "scripts": {
+        "start": "electron ."
+    },
+    "dependencies": {
+        "electron": "^28.1.0",
+        "ipfs-only-hash": "^4.0.0",
+        "adm-zip": "^0.5.10"
+    }
+}
